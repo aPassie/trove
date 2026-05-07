@@ -1,0 +1,13 @@
+{
+  "name": "trove",
+  "private": true,
+  "workspaces": [
+    "web",
+    "workers/*"
+  ],
+  "scripts": {
+    "dev": "bun --filter='*' dev",
+    "build": "bun --filter='@trove/web' build",
+    "typecheck": "bun --filter='*' typecheck"
+  }
+}
