@@ -1,0 +1,12 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "trove-bff",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-05-25",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": { "enabled": true },
+	"upload_source_maps": true,
+	"services": [
+		{ "binding": "ORCHESTRATOR", "service": "trove-orchestrator" }
+	]
+}
