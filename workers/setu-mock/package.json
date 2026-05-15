@@ -1,0 +1,23 @@
+{
+	"name": "@trove/setu-mock",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit",
+		"cf-typegen": "wrangler types"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20260525.1",
+		"@types/node": "^25.9.1",
+		"typescript": "^5.5.2",
+		"vitest": "^3.2.0",
+		"wrangler": "^4.94.0"
+	},
+	"dependencies": {
+		"hono": "^4.12.23"
+	}
+}
