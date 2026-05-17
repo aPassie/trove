@@ -1,4 +1,4 @@
-// backend http server entry — wires parsing, agent, and itr
+// backend http server entry — wires routes for parsing, agent, itr
 
 package main
 
@@ -8,8 +8,11 @@ import (
 	"os"
 
 	"github.com/aPassie/trove/backend/internal/agent"
+	"github.com/aPassie/trove/backend/internal/audit"
 	"github.com/aPassie/trove/backend/internal/itr"
 	"github.com/aPassie/trove/backend/internal/parsing"
+	"github.com/aPassie/trove/backend/internal/redact"
+	"github.com/aPassie/trove/backend/internal/storage"
 )
 
 func main() {
@@ -18,9 +21,11 @@ func main() {
 		port = "8787"
 	}
 
-	parser := parsing.New()
-	analyst := agent.New()
+	store := storage.MustOpen(os.Getenv("NEON_DATABASE_URL"))
+	auditor := audit.New(store, redact.New())
+	analyst := agent.New(auditor)
 	drafter := itr.NewDrafter()
+	parser := parsing.New()
 
 	mux := http.NewServeMux()
 	mux.Handle("POST /parse/26as", parsing.Handler(parser))
