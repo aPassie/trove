@@ -8,7 +8,7 @@ most indian gig workers leave ₹15k–40k of tds with the tax department every 
 
 ## stack
 
-next.js 16, go on cloudflare containers, workers, workflows, durable objects, postgres on neon.
+next.js 16, go on cloudflare containers, workers, workflows, durable objects, postgres on neon, gemini via cloudflare ai gateway.
 
 ## layout
 
@@ -21,7 +21,38 @@ next.js 16, go on cloudflare containers, workers, workflows, durable objects, po
 
 ## dev
 
+copy `.env.example` to `.env` and fill in what you have. anything blank degrades gracefully — no gemini key means the agent uses a deterministic summary; no postgres means the audit log fails silently.
+
 ```
 bun install
-bun dev
 ```
+
+then in four shells:
+
+```
+cd workers/setu-mock     && bun run dev    # :8788
+cd workers/orchestrator  && bun run dev    # :8787-orchestrator
+cd workers/bff           && bun run dev    # :8787-bff
+cd services/backend      && go run ./cmd/server   # :8787 (set PORT to move it)
+cd web                   && bun run dev    # :3000
+```
+
+(or `bun --filter='*' dev` from the root if you want them parallel in one terminal.)
+
+## the loop
+
+a case is a cloudflare workflow with four real steps and a pause:
+
+```
+pull 26as  →  parse  →  analyse (gemini)  →  awaiting-approval  →  draft itr-1
+```
+
+the orchestrator updates a per-case durable object at every step boundary. the browser polls `/api/cases/:id` to render the timeline. when the user clicks approve, the bff posts `/api/cases/:id/approve`, which sends the `user-approval` event to the paused workflow and it resumes.
+
+## deploy
+
+1. neon — create a project, copy the connection string into `NEON_DATABASE_URL`, run `psql $NEON_DATABASE_URL -f services/backend/migrations/0001_init.sql`
+2. cloudflare ai gateway — create a gateway, pass `gemini-2.5-flash` requests through it, copy the gateway url into `GEMINI_GATEWAY_URL` and your google ai studio key into `GEMINI_API_KEY`
+3. backend — `cd services/backend && docker build -t trove-backend .`, push to wherever (cloudflare containers, fly, render). expose `:8787`. set `NEON_DATABASE_URL` + `GEMINI_*` env vars.
+4. workers — `cd workers/setu-mock && bun run deploy`, same for `orchestrator` and `bff`. set the orchestrator's `BACKEND_URL` var to your deployed backend's url.
+5. web — `cd web && vercel --prod`. set `AUTH_*` env vars and point the bff fetcher at your bff worker.

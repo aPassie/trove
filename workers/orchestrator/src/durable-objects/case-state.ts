@@ -1,4 +1,4 @@
-// per-case durable object — holds the step timeline, fetched as json by the browser
+// per-case durable object — step timeline plus the final draft, fetched as json
 
 import { DurableObject } from 'cloudflare:workers'
 
@@ -14,6 +14,7 @@ export type CaseStep = {
 type State = {
 	caseId: string
 	steps: CaseStep[]
+	draft?: object
 }
 
 export class CaseState extends DurableObject<Env> {
@@ -28,7 +29,18 @@ export class CaseState extends DurableObject<Env> {
 
 	async updateStep(step: CaseStep): Promise<void> {
 		const state = (await this.ctx.storage.get<State>('state')) ?? { caseId: '', steps: [] }
-		state.steps.push(step)
+		const idx = state.steps.findIndex((s) => s.name === step.name)
+		if (idx >= 0) {
+			state.steps[idx] = step
+		} else {
+			state.steps.push(step)
+		}
+		await this.ctx.storage.put('state', state)
+	}
+
+	async setDraft(draft: object): Promise<void> {
+		const state = (await this.ctx.storage.get<State>('state')) ?? { caseId: '', steps: [] }
+		state.draft = draft
 		await this.ctx.storage.put('state', state)
 	}
 }

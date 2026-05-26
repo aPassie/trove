@@ -9,6 +9,7 @@ import (
 
 	"github.com/aPassie/trove/backend/internal/agent"
 	"github.com/aPassie/trove/backend/internal/audit"
+	"github.com/aPassie/trove/backend/internal/gemini"
 	"github.com/aPassie/trove/backend/internal/itr"
 	"github.com/aPassie/trove/backend/internal/parsing"
 	"github.com/aPassie/trove/backend/internal/redact"
@@ -21,9 +22,13 @@ func main() {
 		port = "8787"
 	}
 
-	store := storage.MustOpen(os.Getenv("NEON_DATABASE_URL"))
+	var store *storage.Store
+	if dsn := os.Getenv("NEON_DATABASE_URL"); dsn != "" {
+		store = storage.MustOpen(dsn)
+	}
 	auditor := audit.New(store, redact.New())
-	analyst := agent.New(auditor)
+	llm := gemini.New(os.Getenv("GEMINI_API_KEY"), os.Getenv("GEMINI_GATEWAY_URL"))
+	analyst := agent.New(auditor, llm)
 	drafter := itr.NewDrafter()
 	parser := parsing.New()
 

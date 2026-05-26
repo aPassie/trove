@@ -28,6 +28,9 @@ type Entry struct {
 }
 
 func (a *Auditor) Record(e Entry) error {
+	if a.store == nil {
+		return nil
+	}
 	cleaned, err := a.redactor.Redact(e.Payload)
 	if err != nil {
 		return err

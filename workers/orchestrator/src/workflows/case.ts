@@ -90,6 +90,7 @@ export class CaseWorkflow extends WorkflowEntrypoint<Env, Params> {
 			return data
 		})
 
+		await stub.setDraft(draft)
 		return { caseId: event.instanceId, draft }
 	}
 }

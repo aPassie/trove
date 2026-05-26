@@ -24,4 +24,9 @@ app.get('/api/cases/:id', async (c) => {
 	return c.env.ORCHESTRATOR.fetch(`https://orchestrator/case/${id}`)
 })
 
+app.post('/api/cases/:id/approve', async (c) => {
+	const id = c.req.param('id')
+	return c.env.ORCHESTRATOR.fetch(`https://orchestrator/case/${id}/approve`, { method: 'POST' })
+})
+
 export default app

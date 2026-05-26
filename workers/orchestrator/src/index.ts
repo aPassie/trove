@@ -20,6 +20,14 @@ export default {
 			return Response.json({ caseId: instance.id })
 		}
 
+		const approve = url.pathname.match(/^\/case\/([^/]+)\/approve$/)
+		if (approve && req.method === 'POST') {
+			const [, caseId] = approve
+			const instance = await env.CASE_WORKFLOW.get(caseId)
+			await instance.sendEvent({ type: 'user-approval', payload: { type: 'approved' } })
+			return Response.json({ ok: true })
+		}
+
 		const match = url.pathname.match(/^\/case\/([^/]+)$/)
 		if (match) {
 			const [, caseId] = match

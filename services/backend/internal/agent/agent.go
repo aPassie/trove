@@ -1,23 +1,27 @@
-// agent — analyses a parsed form 26as and records the action to the audit log
+// agent — analyses a parsed form 26as, asks gemini for a human summary, audits the call
 
 package agent
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/aPassie/trove/backend/internal/audit"
+	"github.com/aPassie/trove/backend/internal/gemini"
 	"github.com/aPassie/trove/backend/internal/parsing"
 )
 
 type Agent struct {
 	auditor *audit.Auditor
+	llm     *gemini.Client
 }
 
-func New(auditor *audit.Auditor) *Agent {
-	return &Agent{auditor: auditor}
+func New(auditor *audit.Auditor, llm *gemini.Client) *Agent {
+	return &Agent{auditor: auditor, llm: llm}
 }
 
 type AnalyseOutput struct {
@@ -29,14 +33,14 @@ type AnalyseOutput struct {
 	Summary        string             `json:"summary"`
 }
 
-func (a *Agent) Analyse(in parsing.Parsed26AS) *AnalyseOutput {
+func (a *Agent) Analyse(ctx context.Context, in parsing.Parsed26AS) *AnalyseOutput {
 	out := &AnalyseOutput{
 		PAN:            in.PAN,
 		AssessmentYear: in.AssessmentYear,
 		TaxpayerName:   in.TaxpayerName,
 		TDSEntries:     in.TDSEntries,
 		RefundEstimate: in.TotalTDSDeducted,
-		Summary:        fmt.Sprintf("found ₹%.0f across %d tds entries", in.TotalTDSDeducted, len(in.TDSEntries)),
+		Summary:        a.summarize(ctx, in),
 	}
 	if a.auditor != nil {
 		_ = a.auditor.Record(audit.Entry{
@@ -50,6 +54,25 @@ func (a *Agent) Analyse(in parsing.Parsed26AS) *AnalyseOutput {
 	return out
 }
 
+func (a *Agent) summarize(ctx context.Context, in parsing.Parsed26AS) string {
+	fallback := fmt.Sprintf("₹%.0f withheld as tds across %d entries — likely fully refundable", in.TotalTDSDeducted, len(in.TDSEntries))
+	if a.llm == nil {
+		return fallback
+	}
+	prompt := fmt.Sprintf(
+		"In one calm sentence, summarise this indian freelancer's tax situation for assessment year %s. They have ₹%.0f of tds withheld across %d deductors. Do not invent numbers. Write in lowercase.",
+		in.AssessmentYear, in.TotalTDSDeducted, len(in.TDSEntries),
+	)
+	llmCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	out, err := a.llm.Generate(llmCtx, prompt)
+	if err != nil {
+		log.Printf("agent: gemini fallback: %v", err)
+		return fallback
+	}
+	return out
+}
+
 func Handler(a *Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in parsing.Parsed26AS
@@ -57,6 +80,6 @@ func Handler(a *Agent) http.HandlerFunc {
 			http.Error(w, err.Error(), 400)
 			return
 		}
-		_ = json.NewEncoder(w).Encode(a.Analyse(in))
+		_ = json.NewEncoder(w).Encode(a.Analyse(r.Context(), in))
 	}
 }
