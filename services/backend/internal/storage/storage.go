@@ -7,11 +7,20 @@ import (
 	"log"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type Conn interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+}
+
 type Store struct {
-	pg *pgxpool.Pool
+	pg Conn
+}
+
+func NewStore(pg Conn) *Store {
+	return &Store{pg: pg}
 }
 
 func MustOpen(dsn string) *Store {
@@ -19,7 +28,7 @@ func MustOpen(dsn string) *Store {
 	if err != nil {
 		log.Fatalf("storage: %v", err)
 	}
-	return &Store{pg: pool}
+	return NewStore(pool)
 }
 
 func (s *Store) InsertAudit(actor, action, target string, payload []byte, ts time.Time) error {

@@ -1,4 +1,4 @@
-// agent — analyses a parsed form 26as, asks gemini for a human summary, audits the call
+// agent — analyses a parsed form 26as, asks the llm for a human summary, audits the call
 
 package agent
 
@@ -11,16 +11,19 @@ import (
 	"time"
 
 	"github.com/aPassie/trove/backend/internal/audit"
-	"github.com/aPassie/trove/backend/internal/gemini"
 	"github.com/aPassie/trove/backend/internal/parsing"
 )
 
-type Agent struct {
-	auditor *audit.Auditor
-	llm     *gemini.Client
+type LLM interface {
+	Generate(ctx context.Context, prompt string) (string, error)
 }
 
-func New(auditor *audit.Auditor, llm *gemini.Client) *Agent {
+type Agent struct {
+	auditor *audit.Auditor
+	llm     LLM
+}
+
+func New(auditor *audit.Auditor, llm LLM) *Agent {
 	return &Agent{auditor: auditor, llm: llm}
 }
 

@@ -1,15 +1,11 @@
 // per-case durable object — step timeline plus the final draft, fetched as json
 
 import { DurableObject } from 'cloudflare:workers'
+import { mergeStep, type CaseStep } from './merge-step'
+
+export type { CaseStep } from './merge-step'
 
 type Env = Record<string, unknown>
-
-export type CaseStep = {
-	name: string
-	status: 'pending' | 'running' | 'done' | 'awaiting-approval' | 'failed'
-	startedAt?: number
-	finishedAt?: number
-}
 
 type State = {
 	caseId: string
@@ -29,12 +25,7 @@ export class CaseState extends DurableObject<Env> {
 
 	async updateStep(step: CaseStep): Promise<void> {
 		const state = (await this.ctx.storage.get<State>('state')) ?? { caseId: '', steps: [] }
-		const idx = state.steps.findIndex((s) => s.name === step.name)
-		if (idx >= 0) {
-			state.steps[idx] = step
-		} else {
-			state.steps.push(step)
-		}
+		state.steps = mergeStep(state.steps, step)
 		await this.ctx.storage.put('state', state)
 	}
 
