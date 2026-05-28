@@ -5,7 +5,7 @@
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"start": "wrangler dev",
-		"dev": "wrangler dev",
+		"dev": "wrangler dev --port 8790",
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit",
 		"cf-typegen": "wrangler types"
