@@ -5,6 +5,7 @@ export type CaseStep = {
 	status: 'pending' | 'running' | 'done' | 'awaiting-approval' | 'failed'
 	startedAt?: number
 	finishedAt?: number
+	error?: string
 }
 
 export function mergeStep(steps: CaseStep[], step: CaseStep): CaseStep[] {

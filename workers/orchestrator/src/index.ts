@@ -24,7 +24,7 @@ export default {
 		if (approve && req.method === 'POST') {
 			const [, caseId] = approve
 			const instance = await env.CASE_WORKFLOW.get(caseId)
-			await instance.sendEvent({ type: 'user-approval', payload: { type: 'approved' } })
+			await instance.sendEvent({ type: 'approved', payload: { type: 'approved' } })
 			return Response.json({ ok: true })
 		}
 

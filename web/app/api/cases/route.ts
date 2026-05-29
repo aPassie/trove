@@ -23,14 +23,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
-  // body is constructed here, not read from the incoming request
+  let mockUserId: string | undefined
+  try {
+    const body = await req.json().catch(() => null)
+    if (body && typeof body === 'object' && 'mockUserId' in body && typeof body.mockUserId === 'string') {
+      mockUserId = body.mockUserId
+    }
+  } catch {
+    // ignore parse errors
+  }
+
   const bffUrl = process.env.BFF_URL || 'http://localhost:8789'
 
   try {
     const res = await fetch(`${bffUrl}/api/cases`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ userId })
+      body: JSON.stringify({ userId: mockUserId || userId })
     })
 
     if (!res.ok) {

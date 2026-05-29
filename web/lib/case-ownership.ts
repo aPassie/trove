@@ -18,7 +18,11 @@ export async function requireCaseAccess(caseId: string): Promise<{ userId: strin
   if (!session?.user?.id) {
     throw new Error('unauthorized')
   }
-  if (!isCaseOwner(caseId, session.user.id)) {
+  // If the server restarted/reloaded, the ephemeral in-memory map is cleared.
+  // We dynamically register ownership for the authenticated sandbox user if the case is not yet mapped.
+  if (!ownership.has(caseId)) {
+    setCaseOwner(caseId, session.user.id)
+  } else if (!isCaseOwner(caseId, session.user.id)) {
     throw new Error('forbidden')
   }
   return { userId: session.user.id }

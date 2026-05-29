@@ -27,17 +27,14 @@ copy `.env.example` to `.env` and fill in what you have. anything blank degrades
 bun install
 ```
 
-then in four shells:
+then in two shells for the portfolio demo:
 
 ```
-cd workers/setu-mock     && bun run dev    # :8788
-cd workers/orchestrator  && bun run dev    # :8787-orchestrator
-cd workers/bff           && bun run dev    # :8787-bff
-cd services/backend      && go run ./cmd/server   # :8787 (set PORT to move it)
-cd web                   && bun run dev    # :3000
+bun run dev                            # web :3000, setu-mock :8788, orchestrator :8790, bff :8789
+cd services/backend && go run ./cmd/server   # backend :8787 (set PORT to move it)
 ```
 
-(or `bun --filter='*' dev` from the root if you want them parallel in one terminal.)
+The root dev command intentionally multiplexes logs from all JavaScript workspaces, so repeated-looking Next.js output is normal as long as each service ends with `Ready` or `Running`.
 
 ## the loop
 
@@ -47,7 +44,7 @@ a case is a cloudflare workflow with four real steps and a pause:
 pull 26as  →  parse  →  analyse (gemini)  →  awaiting-approval  →  draft itr-1
 ```
 
-the orchestrator updates a per-case durable object at every step boundary. the browser polls `/api/cases/:id` to render the timeline. when the user clicks approve, the bff posts `/api/cases/:id/approve`, which sends the `user-approval` event to the paused workflow and it resumes.
+the orchestrator updates a per-case durable object at every step boundary. the browser polls `/api/cases/:id` to render the timeline. when the user clicks approve, the bff posts `/api/cases/:id/approve`, which sends the approval event to the paused workflow and it resumes.
 
 ## deploy
 

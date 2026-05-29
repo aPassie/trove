@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "bun --filter='*' dev",
-    "build": "bun --filter='@trove/web' build",
+    "build": "cd web && bun run build",
     "typecheck": "bun --filter='*' typecheck"
   }
 }

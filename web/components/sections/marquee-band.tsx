@@ -4,11 +4,11 @@ import { motion } from 'framer-motion'
 
 const ITEMS = [
   'AUTOMATED TDS SCAN',
-  'SECURE DIGILOCKER GATEWAY',
+  'MOCK DIGILOCKER GATEWAY',
   'NO PORTAL CREDENTIALS STORED',
   'ZERO CA COMMISSIONS',
-  'READY-TO-FILE ITR-1',
-  '12 MINUTES TO CLAIM'
+  'ITR-1 STYLE JSON',
+  'ONE-MINUTE WALKTHROUGH'
 ]
 
 export function MarqueeBand() {
