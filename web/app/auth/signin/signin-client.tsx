@@ -7,11 +7,7 @@ import { ArrowRight } from 'lucide-react'
 export function SignInClient() {
   return (
     <main className="relative flex min-h-screen items-center justify-center bg-[#0a0a0a] px-4 py-16 overflow-hidden">
-      <img
-        src="/hero-bg.png"
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover opacity-[0.04] mix-blend-multiply pointer-events-none"
-      />
+
 
       <motion.div
         initial={{ y: 20, opacity: 0 }}

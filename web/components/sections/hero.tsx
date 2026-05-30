@@ -23,11 +23,7 @@ export function Hero() {
   return (
     <div className="min-h-screen bg-[#080808] text-[#F0EDE6]">
       <section className="relative isolate overflow-hidden border-b border-white/[0.07]">
-        <img
-          src="/hero-bg.png"
-          alt=""
-          className="absolute inset-0 -z-10 h-full w-full object-cover opacity-[0.16] mix-blend-screen"
-        />
+
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(8,8,8,0.62),rgba(8,8,8,0.96))]" />
 
         <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
@@ -106,9 +102,12 @@ export function Hero() {
           <div className="relative">
             <div className="absolute -inset-px rounded-xl bg-gradient-to-b from-primary/10 via-white/[0.04] to-transparent opacity-60 pointer-events-none" />
             <div className="relative overflow-hidden rounded-xl border border-white/[0.09] bg-black shadow-[0_24px_60px_rgba(0,0,0,0.55)]">
-              <video controls preload="metadata" poster="/scan-preview.png" className="aspect-video w-full bg-black object-cover block">
-                <source src="/product-walkthrough.mp4" type="video/mp4" />
-              </video>
+              <video 
+                src={process.env.NEXT_PUBLIC_HERO_VIDEO_URL} 
+                controls 
+                preload="metadata" 
+                className="aspect-video w-full bg-black object-cover block"
+              />
             </div>
           </div>
         </div>
