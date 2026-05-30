@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify-frontend:
+    name: Verify Frontend (Next.js)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run Typecheck
+        run: bun run --cwd web typecheck
+
+      - name: Run Next.js Build
+        run: bun run --cwd web build
+        env:
+          NEXT_PUBLIC_AUTH_DEMO: "true"
+          NEXT_PUBLIC_HERO_VIDEO_URL: "https://ci8w4apv5qhhvpkg.public.blob.vercel-storage.com/final.mp4"
+          AUTH_SECRET: "ci-secret-value-for-testing"
+
+  verify-backend:
+    name: Verify Backend (Go)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Install Go Dependencies
+        run: cd services/backend && go mod download
+
+      - name: Run Go Unit Tests
+        run: cd services/backend && go test -v ./...
