@@ -8,5 +8,8 @@
 	"upload_source_maps": true,
 	"services": [
 		{ "binding": "ORCHESTRATOR", "service": "trove-orchestrator" }
+	],
+	"ratelimits": [
+		{ "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 15, "period": 60 } }
 	]
 }

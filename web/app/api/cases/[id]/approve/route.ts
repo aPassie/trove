@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
-import { requireCaseAccess } from '@/lib/case-ownership'
+import { getSessionUserId } from '@/lib/case-ownership'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { isSameOrigin } from '@/lib/origin'
+import { bffUrl, bffHeaders } from '@/lib/internal-api'
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -9,31 +11,33 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: 'invalid case id' }, { status: 400 })
   }
 
+  if (!isSameOrigin(req)) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
+
   const clientIp = getClientIp(req)
   if (!checkRateLimit(`approve-case:${clientIp}`, 10)) {
     return NextResponse.json({ error: 'too many requests' }, { status: 429 })
   }
 
-  if (req.headers.get('origin')) {
-    const allowed = process.env.AUTH_URL || 'http://localhost:3000'
-    if (req.headers.get('origin') !== allowed) {
-      return NextResponse.json({ error: 'forbidden' }, { status: 403 })
-    }
-  }
-
+  let userId: string
   try {
-    await requireCaseAccess(id)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : ''
-    if (msg === 'unauthorized') return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-    if (msg === 'forbidden') return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+    userId = await getSessionUserId()
+  } catch {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
-  const bffUrl = process.env.BFF_URL || 'http://localhost:8789'
-
   try {
-    const res = await fetch(`${bffUrl}/api/cases/${encodeURIComponent(id)}/approve`, { method: 'POST' })
+    const res = await fetch(bffUrl(`/api/cases/${encodeURIComponent(id)}/approve`), {
+      method: 'POST',
+      headers: bffHeaders({ 'x-trove-user': userId })
+    })
+    if (res.status === 403) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+    }
+    if (res.status === 404) {
+      return NextResponse.json({ error: 'not found' }, { status: 404 })
+    }
     if (!res.ok) {
       return NextResponse.json({ error: 'failed to approve case' }, { status: 502 })
     }

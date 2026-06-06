@@ -43,6 +43,7 @@ type CaseState = {
 type DashboardProps = {
   session: {
     user?: {
+      id?: string | null
       name?: string | null
       email?: string | null
       image?: string | null
@@ -74,6 +75,7 @@ const STEP_LABELS: Record<string, { title: string; desc: string }> = {
 }
 
 export function Dashboard({ session }: DashboardProps) {
+  const storageKey = `trove_scan_history:${session?.user?.id ?? 'anon'}`
   const [caseId, setCaseId] = useState<string | null>(null)
   const [caseState, setCaseState] = useState<CaseState | null>(null)
   const [isStarting, setIsStarting] = useState(false)
@@ -83,7 +85,7 @@ export function Dashboard({ session }: DashboardProps) {
   const [scanHistory, setScanHistory] = useState<any[]>([])
 
   useEffect(() => {
-    const stored = localStorage.getItem('trove_scan_history')
+    const stored = localStorage.getItem(storageKey)
     if (stored) {
       try {
         setScanHistory(JSON.parse(stored))
@@ -91,11 +93,11 @@ export function Dashboard({ session }: DashboardProps) {
         console.error(e)
       }
     }
-  }, [])
+  }, [storageKey])
 
   const saveHistory = (history: any[]) => {
     setScanHistory(history)
-    localStorage.setItem('trove_scan_history', JSON.stringify(history))
+    localStorage.setItem(storageKey, JSON.stringify(history))
   }
 
   useEffect(() => {
@@ -129,7 +131,6 @@ export function Dashboard({ session }: DashboardProps) {
   const startCase = async (specificKey?: string) => {
     setIsStarting(true)
     
-    // Choose a random profile different from the current one to ensure variety
     const keyToScan = specificKey || (() => {
       const currentKey = caseState?.mockUserId
       const remainingKeys = MOCK_PROFILE_KEYS.filter(k => k !== currentKey)
@@ -184,7 +185,6 @@ export function Dashboard({ session }: DashboardProps) {
     }
   }
 
-  // Poll case state
   useEffect(() => {
     if (!caseId) return
 
@@ -194,7 +194,6 @@ export function Dashboard({ session }: DashboardProps) {
         if (res.ok) {
           const data = (await res.json()) as CaseState
           
-          // Attach mockUserId from current state to keep tracking consistent
           const activeItem = scanHistory.find(h => h.caseId === caseId)
           if (activeItem && activeItem.mockUserId) {
             data.mockUserId = activeItem.mockUserId
@@ -202,7 +201,6 @@ export function Dashboard({ session }: DashboardProps) {
           
           setCaseState(data)
 
-          // Determine status
           let status: 'scanning' | 'awaiting-approval' | 'completed' | 'failed' = 'scanning'
           const hasFailed = data.steps.some((s) => s.status === 'failed')
           const isAwaiting = data.steps.some((s) => s.name === 'awaiting-approval' && s.status === 'awaiting-approval')
@@ -214,7 +212,6 @@ export function Dashboard({ session }: DashboardProps) {
             status = 'awaiting-approval'
           }
 
-          // Update scan history in localStorage
           setScanHistory(prevHistory => {
             const index = prevHistory.findIndex(h => h.caseId === caseId)
             if (index !== -1) {
@@ -230,13 +227,12 @@ export function Dashboard({ session }: DashboardProps) {
               }
               const nextHistory = [...prevHistory]
               nextHistory[index] = updatedItem
-              localStorage.setItem('trove_scan_history', JSON.stringify(nextHistory))
+              localStorage.setItem(storageKey, JSON.stringify(nextHistory))
               return nextHistory
             }
             return prevHistory
           })
 
-          // Stop polling if draft is generated or step failed
           const hasFailedCheck = data.steps.some((s) => s.status === 'failed')
           if (data.draft || hasFailedCheck) {
             if (pollIntervalRef.current) {
@@ -246,11 +242,9 @@ export function Dashboard({ session }: DashboardProps) {
           }
         }
       } catch {
-        // polling error – will retry on next interval
       }
     }
 
-    // Run immediately and poll
     poll()
     pollIntervalRef.current = setInterval(poll, 1500)
 
@@ -259,16 +253,14 @@ export function Dashboard({ session }: DashboardProps) {
         clearInterval(pollIntervalRef.current)
       }
     }
-  }, [caseId, scanHistory])
+  }, [caseId, scanHistory, storageKey])
 
-  // Approve case
   const approveCase = async () => {
     if (!caseId) return
     setIsApproving(true)
     try {
       const res = await fetch(`/api/cases/${caseId}/approve`, { method: 'POST' })
       if (res.ok) {
-        // Immediately trigger polling to capture running state
         const pollRes = await fetch(`/api/cases/${caseId}`)
         if (pollRes.ok) {
           const data = await pollRes.json()
@@ -285,7 +277,7 @@ export function Dashboard({ session }: DashboardProps) {
               }
               const nextHistory = [...prevHistory]
               nextHistory[index] = updatedItem
-              localStorage.setItem('trove_scan_history', JSON.stringify(nextHistory))
+              localStorage.setItem(storageKey, JSON.stringify(nextHistory))
               return nextHistory
             }
             return prevHistory
@@ -325,7 +317,6 @@ export function Dashboard({ session }: DashboardProps) {
     URL.revokeObjectURL(url)
   }
 
-  // Get active or last completed step status
   const getStepStatus = (stepName: string): 'pending' | 'running' | 'done' | 'active' => {
     if (!caseState) return 'pending'
     const step = caseState.steps.find((s) => s.name === stepName)
@@ -349,7 +340,6 @@ export function Dashboard({ session }: DashboardProps) {
     <div className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
         
-        {/* Left column: Sidebar / Vault List */}
         <div className="flex flex-col gap-6 lg:border-r lg:border-white/[0.06] lg:pr-8">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#F0EDE6]/40">Scan Vault</span>
@@ -422,11 +412,9 @@ export function Dashboard({ session }: DashboardProps) {
           </div>
         </div>
 
-        {/* Right column: Workspace */}
         <div className="min-w-0 flex flex-col justify-start">
           <AnimatePresence mode="wait">
             {!isCaseActive ? (
-              // STAGE 1: Landed & Ready to scan
               <motion.div
                 key="start-screen"
                 initial={{ opacity: 0, y: 30 }}
@@ -480,7 +468,6 @@ export function Dashboard({ session }: DashboardProps) {
                 </button>
               </motion.div>
             ) : (
-              // STAGE 2: Scanning & Processing Timeline
               <motion.div
                 key="processing-screen"
                 initial={{ opacity: 0, y: 30 }}
@@ -488,13 +475,11 @@ export function Dashboard({ session }: DashboardProps) {
                 exit={{ opacity: 0, y: -30 }}
                 className="flex flex-col gap-8"
               >
-                {/* Timeline header */}
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] uppercase tracking-wider text-primary font-mono">Case Tracking #{caseId?.slice(0, 8)}</span>
                   <h2 className="text-2xl font-medium text-[#F0EDE6] sm:text-3xl">Recovering Your Unclaimed Withholding</h2>
                 </div>
 
-                {/* Steps timeline list */}
                 <div className="flex flex-col gap-6 rounded-2xl border border-white/[0.08] bg-[#0c0c0c] p-6 md:p-8">
                   {['pull-26as', 'parse', 'analyse', 'awaiting-approval', 'draft-itr1'].map((stepName, idx) => {
                     const label = STEP_LABELS[stepName]
@@ -504,7 +489,6 @@ export function Dashboard({ session }: DashboardProps) {
                     const isStepDone = status === 'done' || (stepName === 'awaiting-approval' && isCompleted) || (stepName === 'pull-26as' && getStepStatus('parse') !== 'pending')
                     return (
                       <div key={stepName} className="relative flex gap-4 md:gap-6">
-                        {/* Line connector */}
                         {idx < 4 && (
                           <div
                             className={`absolute bottom-[-1.5rem] left-[15px] top-[28px] w-[2px] transition-colors duration-500 ${
@@ -513,7 +497,6 @@ export function Dashboard({ session }: DashboardProps) {
                           />
                         )}
 
-                        {/* Step indicator circle */}
                         <div className="relative flex h-8 w-8 items-center justify-center">
                           {isStepRunning ? (
                             <div className="flex h-6 w-6 items-center justify-center rounded-full border border-primary bg-[#0a0a0a]">
@@ -532,7 +515,6 @@ export function Dashboard({ session }: DashboardProps) {
                           )}
                         </div>
 
-                        {/* Label contents */}
                         <div className="flex flex-col gap-1 py-1">
                           <span
                             className={`text-sm font-semibold transition-colors duration-500 ${
@@ -562,7 +544,6 @@ export function Dashboard({ session }: DashboardProps) {
                   </div>
                 )}
 
-                {/* STAGE 3: Review summary & authorize (pauses for approval) */}
                 {isAwaitingApproval && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -633,7 +614,6 @@ export function Dashboard({ session }: DashboardProps) {
                   </motion.div>
                 )}
 
-                {/* STAGE 4: Completed Draft Output */}
                 {isCompleted && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -641,22 +621,18 @@ export function Dashboard({ session }: DashboardProps) {
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                     className="flex flex-col gap-0 rounded-3xl border border-primary/20 bg-[#0c0c0c] overflow-hidden shadow-[0_30px_80px_rgba(237,70,45,0.04)]"
                   >
-                    {/* Hero header zone — generous breathing room */}
                     <div className="relative px-8 pt-10 pb-8 md:px-12 md:pt-14 md:pb-10" style={{ background: 'radial-gradient(ellipse 80% 60% at 20% 0%, rgba(237,70,45,0.06), transparent)' }}>
-                      {/* Badge */}
                       <div className="border border-emerald-400/20 bg-emerald-400/5 px-3 py-1 font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-400 inline-flex items-center gap-1.5 font-bold mb-6">
                         <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         RECOVERY SUCCESS
                       </div>
 
-                      {/* Title — serif italic for elegance, sans for structure */}
                       <h3 className="text-2xl sm:text-3xl md:text-4xl font-light text-[#F0EDE6] tracking-tight leading-[1.15]">
                         Your <span className="font-serif italic text-primary font-normal">ITR-1</span> return
                         <br className="hidden sm:block" />
                         {' '}has been drafted.
                       </h3>
 
-                      {/* Hero refund amount — THE centerpiece */}
                       <div className="mt-6 md:mt-8 flex items-baseline gap-3 flex-wrap">
                         <span className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tighter text-[#F0EDE6] leading-none" style={{ fontFeatureSettings: '"tnum" 1' }}>
                           {formattedRefund}
@@ -666,18 +642,14 @@ export function Dashboard({ session }: DashboardProps) {
                         </span>
                       </div>
 
-                      {/* Subtle context line */}
                       <p className="mt-4 text-sm md:text-base text-[#F0EDE6]/40 font-light leading-relaxed max-w-lg">
                         Generated from your mocked Setu TDS ledger. This draft is ready for review and download.
                       </p>
                     </div>
 
-                    {/* Divider */}
                     <div className="mx-8 md:mx-12 h-px bg-gradient-to-r from-primary/20 via-white/[0.06] to-transparent" />
 
-                    {/* Stats grid — larger numbers, clearer hierarchy */}
                     <div className="grid grid-cols-3 px-8 py-7 md:px-12 md:py-9">
-                      {/* TDS Entries */}
                       <div className="flex flex-col gap-1.5">
                         <span className="font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[#F0EDE6]/30">TDS Entries</span>
                         <span className="text-3xl sm:text-4xl font-bold text-[#F0EDE6] tracking-tight leading-none" style={{ fontFeatureSettings: '"tnum" 1' }}>
@@ -685,7 +657,6 @@ export function Dashboard({ session }: DashboardProps) {
                         </span>
                         <span className="text-[10px] text-[#F0EDE6]/25 font-light">withholding records</span>
                       </div>
-                      {/* Sections */}
                       <div className="flex flex-col gap-1.5 border-l border-white/[0.06] pl-6 sm:pl-8">
                         <span className="font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[#F0EDE6]/30">Sections</span>
                         <span className="text-lg sm:text-2xl font-bold font-mono text-[#F0EDE6] tracking-tight leading-none mt-1" title={uniqueSections || '194J, 194C'}>
@@ -693,7 +664,6 @@ export function Dashboard({ session }: DashboardProps) {
                         </span>
                         <span className="text-[10px] text-[#F0EDE6]/25 font-light">tax deduction codes</span>
                       </div>
-                      {/* Status */}
                       <div className="flex flex-col gap-1.5 border-l border-white/[0.06] pl-6 sm:pl-8">
                         <span className="font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[#F0EDE6]/30">ITR-1 Status</span>
                         <span className="text-lg sm:text-2xl font-black text-emerald-400 flex items-center gap-2 leading-none mt-1">
@@ -706,10 +676,8 @@ export function Dashboard({ session }: DashboardProps) {
                       </div>
                     </div>
 
-                    {/* Divider */}
                     <div className="mx-8 md:mx-12 h-px bg-white/[0.04]" />
 
-                    {/* JSON Codeblock display */}
                     <div className="mx-8 md:mx-12 my-6 md:my-8 relative rounded-xl border border-white/[0.08] bg-[#050505] p-5 font-mono text-[10px] leading-relaxed text-[#F0EDE6]/70 shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
                       <div className="absolute right-3 top-3 flex gap-2">
                         <button
@@ -738,7 +706,6 @@ export function Dashboard({ session }: DashboardProps) {
                       </pre>
                     </div>
 
-                    {/* Action buttons */}
                     <div className="flex flex-col gap-3 sm:flex-row px-8 pb-8 md:px-12 md:pb-10">
                       <button
                         onClick={downloadDraft}

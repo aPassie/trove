@@ -1,6 +1,5 @@
 import type { NextConfig } from "next"
 
-// Extract origin from dynamic video URL to prevent CSP blocks without hardcoding
 const getVideoOrigin = () => {
   const videoUrl = process.env.NEXT_PUBLIC_HERO_VIDEO_URL
   if (!videoUrl) return ""
@@ -14,25 +13,24 @@ const getVideoOrigin = () => {
 const videoOrigin = getVideoOrigin()
 const mediaSrcDirective = `media-src 'self'${videoOrigin ? ` ${videoOrigin}` : ""}`
 
+const isDev = process.env.NODE_ENV !== "production"
+const devConnect = isDev ? " http://localhost:* ws://localhost:*" : ""
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https:",
+  "img-src 'self' data:",
   "font-src 'self' data:",
   mediaSrcDirective,
-  "connect-src 'self' http://localhost:* ws://localhost:* https://*.workers.dev wss://*.workers.dev",
+  `connect-src 'self'${devConnect}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
 ].join("; ")
 
 const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "images.higgs.ai" },
-      { protocol: "https", hostname: "d8j0ntlcm91z4.cloudfront.net" }
-    ]
-  },
   async headers() {
     return [
       {
@@ -42,6 +40,8 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
         ]
       }
     ]

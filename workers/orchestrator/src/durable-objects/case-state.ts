@@ -1,5 +1,3 @@
-// per-case durable object — step timeline, analysis, and final draft, fetched as json
-
 import { DurableObject } from 'cloudflare:workers'
 import { mergeStep, type CaseStep } from './merge-step'
 
@@ -9,20 +7,34 @@ type Env = Record<string, unknown>
 
 type State = {
 	caseId: string
+	ownerId?: string
 	steps: CaseStep[]
 	analysis?: object
 	draft?: object
 }
+
+export type PublicState = Omit<State, 'ownerId'>
 
 export class CaseState extends DurableObject<Env> {
 	private async readState(caseId = ''): Promise<State> {
 		return (await this.ctx.storage.get<State>('state')) ?? { caseId, steps: [] }
 	}
 
-	async fetch(req: Request): Promise<Response> {
-		const url = new URL(req.url)
-		const state = await this.readState(url.pathname.split('/').pop() ?? '')
-		return Response.json(state)
+	async getPublicState(): Promise<PublicState> {
+		const { ownerId: _ownerId, ...rest } = await this.readState()
+		return rest
+	}
+
+	async setOwner(ownerId: string): Promise<void> {
+		const state = await this.readState()
+		if (!state.ownerId) {
+			state.ownerId = ownerId
+			await this.ctx.storage.put('state', state)
+		}
+	}
+
+	async getOwner(): Promise<string | null> {
+		return (await this.readState()).ownerId ?? null
 	}
 
 	async setCaseId(caseId: string): Promise<void> {

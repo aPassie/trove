@@ -25,7 +25,7 @@ func TestRecord_InsertsRedactedPayload(t *testing.T) {
 	defer pool.Close()
 
 	pool.ExpectExec(regexp.QuoteMeta(`insert into audit_entries`)).
-		WithArgs("agent", "analyse", "ABCDE1234F", pgxmock.AnyArg(), pgxmock.AnyArg()).
+		WithArgs("agent", "analyse", "[REDACTED_PAN]", pgxmock.AnyArg(), pgxmock.AnyArg()).
 		WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
 	a := New(storage.NewStore(pool), redact.New())

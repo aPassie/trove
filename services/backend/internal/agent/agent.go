@@ -1,5 +1,3 @@
-// agent — analyses a parsed form 26as, asks the llm for a human summary, audits the call
-
 package agent
 
 import (
@@ -80,7 +78,8 @@ func Handler(a *Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in parsing.Parsed26AS
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-			http.Error(w, err.Error(), 400)
+			log.Printf("agent: decode: %v", err)
+			http.Error(w, "invalid request", 400)
 			return
 		}
 		_ = json.NewEncoder(w).Encode(a.Analyse(r.Context(), in))

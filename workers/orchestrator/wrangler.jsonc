@@ -6,6 +6,7 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"observability": { "enabled": true },
 	"upload_source_maps": true,
+	"workers_dev": false,
 	"workflows": [
 		{ "name": "case-workflow", "binding": "CASE_WORKFLOW", "class_name": "CaseWorkflow" }
 	],

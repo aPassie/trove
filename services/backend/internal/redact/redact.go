@@ -1,5 +1,3 @@
-// redact — strips real-looking pan and aadhaar values from payloads before logging
-
 package redact
 
 import (
@@ -21,12 +19,16 @@ func (r *Redactor) Redact(v any) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := string(raw)
-	s = panPattern.ReplaceAllString(s, "[REDACTED_PAN]")
-	s = aadhaarPattern.ReplaceAllString(s, "[REDACTED_AADHAAR]")
+	s := r.RedactString(string(raw))
 	var out any
 	if err := json.Unmarshal([]byte(s), &out); err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (r *Redactor) RedactString(s string) string {
+	s = panPattern.ReplaceAllString(s, "[REDACTED_PAN]")
+	s = aadhaarPattern.ReplaceAllString(s, "[REDACTED_AADHAAR]")
+	return s
 }

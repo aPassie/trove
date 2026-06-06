@@ -1,17 +1,25 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 
+const secret = process.env.AUTH_SECRET
+if (!secret) {
+  throw new Error('AUTH_SECRET is not set — refusing to start with an insecure signing key')
+}
+
+const demoEnabled = process.env.AUTH_DEMO_PROVIDER === 'true'
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET || 'local_fallback_secret_for_trove_development',
+  secret,
+  trustHost: true,
   providers: [
-    ...(process.env.AUTH_DEMO_PROVIDER !== 'false'
+    ...(demoEnabled
       ? [
           Credentials({
             id: 'digilocker-demo',
             name: 'digilocker (demo)',
             credentials: {},
             authorize: async () => ({
-              id: 'demo-aakash',
+              id: `demo-${crypto.randomUUID()}`,
               name: 'Aakash Singh',
               email: 'aakash@trove.demo'
             })

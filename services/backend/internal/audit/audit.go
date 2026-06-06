@@ -1,5 +1,3 @@
-// audit — append-only log of every agent action, routes payloads through redact first
-
 package audit
 
 import (
@@ -39,5 +37,6 @@ func (a *Auditor) Record(e Entry) error {
 	if err != nil {
 		return err
 	}
-	return a.store.InsertAudit(e.Actor, e.Action, e.Target, payload, e.Timestamp)
+	target := a.redactor.RedactString(e.Target)
+	return a.store.InsertAudit(e.Actor, e.Action, target, payload, e.Timestamp)
 }

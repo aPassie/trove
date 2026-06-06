@@ -1,14 +1,13 @@
-// case workflow — pull, parse, analyse, pause for approval, then draft. updates the per-case state at every step.
-
 import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from 'cloudflare:workers'
 import type { CaseState, CaseStep } from '../durable-objects/case-state'
 
-type Params = { userId: string }
+type Params = { ownerId: string; profileId: string }
 
 type Env = {
 	SETU_URL: string
 	BACKEND_URL: string
 	CASE_STATE: DurableObjectNamespace<CaseState>
+	INTERNAL_API_TOKEN?: string
 }
 
 type TDSEntry = {
@@ -41,9 +40,16 @@ type Draft = {
 
 export class CaseWorkflow extends WorkflowEntrypoint<Env, Params> {
 	async run(event: WorkflowEvent<Params>, step: WorkflowStep) {
-		const { userId } = event.payload
+		const { ownerId, profileId } = event.payload
 		const stub = this.env.CASE_STATE.get(this.env.CASE_STATE.idFromName(event.instanceId))
+		await stub.setOwner(ownerId)
 		await stub.setCaseId(event.instanceId)
+
+		const authHeaders = (extra?: Record<string, string>): Record<string, string> => {
+			const headers: Record<string, string> = { ...(extra ?? {}) }
+			if (this.env.INTERNAL_API_TOKEN) headers['authorization'] = `Bearer ${this.env.INTERNAL_API_TOKEN}`
+			return headers
+		}
 
 		const update = (s: CaseStep) => stub.updateStep(s)
 		const fail = async (name: string, err: unknown) => {
@@ -51,7 +57,7 @@ export class CaseWorkflow extends WorkflowEntrypoint<Env, Params> {
 			await update({ name, status: 'failed', finishedAt: Date.now(), error: message })
 		}
 		const fetchJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
-			const res = await fetch(url, init)
+			const res = await fetch(url, { ...init, headers: authHeaders(init?.headers as Record<string, string> | undefined) })
 			if (!res.ok) {
 				throw new Error(`upstream ${res.status} from ${new URL(url).pathname}`)
 			}
@@ -62,7 +68,7 @@ export class CaseWorkflow extends WorkflowEntrypoint<Env, Params> {
 			await update({ name: 'pull-26as', status: 'running', startedAt: Date.now() })
 			await new Promise(resolve => setTimeout(resolve, 1800))
 			try {
-				const data = await fetchJson<Form26AS>(`${this.env.SETU_URL}/form26as?userId=${encodeURIComponent(userId)}`)
+				const data = await fetchJson<Form26AS>(`${this.env.SETU_URL}/form26as?userId=${encodeURIComponent(profileId)}`)
 				await update({ name: 'pull-26as', status: 'done', finishedAt: Date.now() })
 				return data
 			} catch (err) {

@@ -1,9 +1,8 @@
-// itr — drafts an itr-1 return from an analysed 26as
-
 package itr
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/aPassie/trove/backend/internal/parsing"
@@ -52,7 +51,8 @@ func Handler(d *Drafter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in DraftInput
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-			http.Error(w, err.Error(), 400)
+			log.Printf("itr: decode: %v", err)
+			http.Error(w, "invalid request", 400)
 			return
 		}
 		_ = json.NewEncoder(w).Encode(d.Draft(in))

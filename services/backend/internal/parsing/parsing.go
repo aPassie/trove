@@ -1,10 +1,9 @@
-// parsing — pulls structured fields out of a form 26as response and computes the tds total
-
 package parsing
 
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -45,12 +44,14 @@ func Handler(p *Parser) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, err.Error(), 400)
+			log.Printf("parsing: read body: %v", err)
+			http.Error(w, "invalid request", 400)
 			return
 		}
 		out, err := p.Parse(body)
 		if err != nil {
-			http.Error(w, err.Error(), 400)
+			log.Printf("parsing: parse: %v", err)
+			http.Error(w, "invalid request", 400)
 			return
 		}
 		_ = json.NewEncoder(w).Encode(out)

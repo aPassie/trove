@@ -1,10 +1,8 @@
-// returns a fixture 26as for the demo persona, shape mirrors setu's documented response
-
 import { Context } from 'hono'
 
 const MOCK_PROFILES: Record<string, any> = {
 	'demo-aakash': {
-		pan: 'AAKAS9999Z',
+		pan: 'ZZZZZ9999Z',
 		assessmentYear: '2025-26',
 		taxpayerName: 'Aakash Singh',
 		tdsEntries: [
@@ -144,6 +142,9 @@ const MOCK_PROFILES: Record<string, any> = {
 
 export async function getForm26AS(c: Context): Promise<Response> {
 	const userId = c.req.query('userId') || ''
-	const profile = MOCK_PROFILES[userId] || MOCK_PROFILES['demo-aakash']
+	const profile = MOCK_PROFILES[userId]
+	if (!profile) {
+		return c.json({ error: 'unknown profile' }, 404)
+	}
 	return c.json(profile)
 }
