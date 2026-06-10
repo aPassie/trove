@@ -18,10 +18,14 @@ const devConnect = isDev ? " http://localhost:* ws://localhost:*" : ""
 
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  // 'wasm-unsafe-eval' permits WebAssembly (the client-side Trove tax engine)
+  // WITHOUT enabling general eval() — the narrow, correct grant for WASM.
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self' data:",
+  // pdf.js spins up a Web Worker for in-browser PDF text extraction.
+  "worker-src 'self' blob:",
   mediaSrcDirective,
   `connect-src 'self'${devConnect}`,
   "frame-ancestors 'none'",

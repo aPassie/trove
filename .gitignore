@@ -31,4 +31,4 @@ bin/
 *.swp
 .idea/
 .vscode/
-.mcp.json
+.playwright-mcp/

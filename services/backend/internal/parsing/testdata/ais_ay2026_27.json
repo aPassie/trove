@@ -1,0 +1,19 @@
+{
+  "_comment": "SYNTHETIC AIS JSON fixture (nested) — models the AIS export shape; validate against a real export. Same taxpayer/data as the PDF fixtures.",
+  "PartA": {
+    "pan": "ABCDE1234F",
+    "assessmentYear": "2026-27",
+    "financialYear": "2025-26",
+    "name": "ARJUN MOCK SHARMA"
+  },
+  "PartB": {
+    "tdsTcs": [
+      { "infoCode": "194J", "description": "Fees for professional services", "sourceName": "NEXUS TECH SOLUTIONS PRIVATE LIMITED", "amountReceived": 770000, "taxDeducted": 77000 },
+      { "infoCode": "194C", "description": "Payments to contractors", "sourceName": "GLOBAL CONTRACTORS CORP", "amountReceived": 1200000, "taxDeducted": 24000 }
+    ],
+    "sft": [
+      { "infoCode": "SFT-005", "description": "Outward Foreign Remittance", "reportingEntity": "ICICI BANK LIMITED", "transactionValue": 750000, "shareType": "Self" },
+      { "infoCode": "SFT-014", "description": "Sale of immovable property", "reportingEntity": "SUB-REGISTRAR OFFICE", "transactionValue": 4500000, "shareType": "Joint (50%)" }
+    ]
+  }
+}

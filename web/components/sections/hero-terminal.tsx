@@ -11,29 +11,29 @@ interface TermLine {
 }
 
 const SCRIPT: TermLine[] = [
-  { text: '$ trove scan --form 26AS --year 2025-26', type: 'command', delay: 0 },
+  { text: '$ trove analyze form26as_2026-27.pdf', type: 'command', delay: 0 },
   { text: '', type: 'blank', delay: 600 },
-  { text: '⟐ Connecting to TRACES portal...', type: 'muted', delay: 400 },
-  { text: '✓ Authenticated. Fetching Form 26AS ledger.', type: 'output', delay: 800 },
+  { text: '⟐ Parsing locally — nothing leaves this device...', type: 'muted', delay: 400 },
+  { text: '✓ Form 26AS detected · AY 2026-27', type: 'output', delay: 800 },
   { text: '', type: 'blank', delay: 300 },
-  { text: '  Found 5 TDS deductions:', type: 'output', delay: 500 },
+  { text: '  Found 5 TDS deductions under §194J:', type: 'output', delay: 500 },
   { text: '  ├─ Acme Design Studio      194J   ₹6,600    withheld', type: 'accent', delay: 250 },
-  { text: '  ├─ Brightline Media        194J   ₹8,400    unclaimed', type: 'accent', delay: 200 },
-  { text: '  ├─ Quartz Labs             194C   ₹10,200   withheld', type: 'accent', delay: 200 },
-  { text: '  ├─ Northwind Studios       194J   ₹12,000   unclaimed', type: 'accent', delay: 200 },
-  { text: '  └─ Beacon Analytics        194J   ₹13,800   ready', type: 'accent', delay: 200 },
+  { text: '  ├─ Brightline Media        194J   ₹8,400    withheld', type: 'accent', delay: 200 },
+  { text: '  ├─ Quartz Labs             194J   ₹10,200   withheld', type: 'accent', delay: 200 },
+  { text: '  ├─ Northwind Studios       194J   ₹12,000   withheld', type: 'accent', delay: 200 },
+  { text: '  └─ Beacon Analytics        194J   ₹13,800   withheld', type: 'accent', delay: 200 },
   { text: '', type: 'blank', delay: 400 },
-  { text: '⟐ Cross-referencing with AIS/TIS...', type: 'muted', delay: 500 },
-  { text: '✓ All entries matched. No discrepancies.', type: 'output', delay: 700 },
+  { text: '⟐ Applying §44ADA presumptive scheme...', type: 'muted', delay: 500 },
+  { text: '✓ Deemed income: 50% of ₹5,10,000 receipts', type: 'output', delay: 700 },
   { text: '', type: 'blank', delay: 300 },
-  { text: '⟐ Calculating refundable balance...', type: 'muted', delay: 500 },
+  { text: '⟐ Comparing regimes — new wins, ₹0 tax after §87A...', type: 'muted', delay: 500 },
   { text: '', type: 'blank', delay: 400 },
   { text: '  ₹51,000 recoverable', type: 'success', delay: 300 },
   { text: '', type: 'blank', delay: 400 },
-  { text: '⟐ Compiling ITR-1 draft...', type: 'muted', delay: 500 },
-  { text: '✓ Generated itr1_draft.json (AY 2025-26)', type: 'output', delay: 600 },
+  { text: '⟐ Drafting ITR-4...', type: 'muted', delay: 500 },
+  { text: '✓ itr4_2026-27.json — valid against the official CBDT schema', type: 'output', delay: 600 },
   { text: '', type: 'blank', delay: 200 },
-  { text: '  Ready to file. 5 entries · ₹51,000 refund · 47s elapsed', type: 'success', delay: 400 },
+  { text: '  Ready to self-file. 5 entries · ₹51,000 refund · 0 bytes uploaded', type: 'success', delay: 400 },
 ]
 
 function TypedLine({ text, type, onDone }: { text: string; type: string; onDone: () => void }) {
@@ -67,9 +67,9 @@ function TypedLine({ text, type, onDone }: { text: string; type: string; onDone:
   const colorClass =
     type === 'command' ? 'text-[#F0EDE6]' :
     type === 'success' ? 'text-primary font-bold' :
-    type === 'accent' ? 'text-[#F0EDE6]/70' :
-    type === 'muted' ? 'text-[#F0EDE6]/35' :
-    'text-[#F0EDE6]/55'
+    type === 'accent' ? 'text-[#F0EDE6]/80' :
+    type === 'muted' ? 'text-[#F0EDE6]/65' :
+    'text-[#F0EDE6]/70'
 
   if (type === 'blank') return <div className="h-3" />
 
@@ -142,7 +142,7 @@ export function HeroTerminal() {
             <div className="w-[8px] h-[8px] rounded-full bg-[#F0EDE6]/[0.07]" />
             <div className="w-[8px] h-[8px] rounded-full bg-[#F0EDE6]/[0.07]" />
           </div>
-          <span className="flex-1 text-center font-mono text-[9px] text-[#F0EDE6]/20 tracking-widest uppercase">
+          <span className="flex-1 text-center font-mono text-[9px] text-[#F0EDE6]/55 tracking-widest uppercase">
             trove — recovery scan
           </span>
           <div className="w-[30px]" />
@@ -162,8 +162,8 @@ export function HeroTerminal() {
           ))}
 
           {lines === 0 && (
-            <div className="text-[#F0EDE6]/40">
-              <span className="text-[#F0EDE6]/25">$</span>
+            <div className="text-[#F0EDE6]/55">
+              <span className="text-[#F0EDE6]/55">$</span>
               <span className="inline-block w-[7px] h-[14px] bg-primary/80 ml-1.5 animate-pulse align-middle" />
             </div>
           )}

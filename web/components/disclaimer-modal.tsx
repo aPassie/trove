@@ -1,3 +1,4 @@
+// first-visit modal that sets expectations — trove prepares, you file
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -51,21 +52,21 @@ export function DisclaimerModal() {
                   <ShieldAlert size={20} />
                 </div>
                 <div>
-                  <span className="font-mono text-[9px] font-black uppercase tracking-widest text-primary">Trove Technical Preview</span>
-                  <h2 className="text-xl font-bold tracking-tight mt-0.5 text-white">Demonstration Environment</h2>
+                  <span className="font-mono text-[9px] font-black uppercase tracking-widest text-primary">Before you start</span>
+                  <h2 className="text-xl font-bold tracking-tight mt-0.5 text-white">Trove prepares. You file.</h2>
                 </div>
               </div>
 
               {/* Message */}
               <div className="space-y-3 font-sans text-xs sm:text-sm text-[#F0EDE6]/70 leading-relaxed font-light">
                 <p>
-                  Welcome to <span className="font-serif italic font-medium text-white">trove*</span>. This application is a fully functional client-side mockup designed to showcase freelance tax recovery pipelines.
+                  <span className="font-serif italic font-medium text-white">trove*</span> reads your AIS or Form 26AS, computes your refund, and drafts an ITR-4 you import on the official e-filing portal yourself. Everything runs in your browser — your documents and PAN are never uploaded anywhere.
                 </p>
                 <p>
-                  Please be aware that compiling direct real-world tax returns and pulling live government statements requires strict regulatory clearances and official authorized government gateway approvals (including production-level DigiLocker, NSDL, and the Income Tax Department e-filing systems).
+                  Trove is a preparation tool, not a Chartered Accountant. You remain the filer of record, and you should review every number before submitting. Cases Trove can’t compute confidently (capital gains, mixed income, receipts above the §44ADA limit) are refused rather than guessed.
                 </p>
                 <p className="border-l-2 border-primary/40 pl-3 bg-primary/[0.03] py-2 text-primary font-mono text-[10px] sm:text-xs uppercase font-semibold">
-                  Note: These regulatory integrations are actively planned and will be introduced in the near future.
+                  Note: Tax parameters are pending independent CA verification — treat drafts as a starting point, not advice.
                 </p>
               </div>
 

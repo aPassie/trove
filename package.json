@@ -2,8 +2,7 @@
   "name": "trove",
   "private": true,
   "workspaces": [
-    "web",
-    "workers/*"
+    "web"
   ],
   "scripts": {
     "dev": "bun --filter='*' dev",

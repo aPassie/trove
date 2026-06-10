@@ -2,21 +2,20 @@
 
 import {
   ArrowRight,
-  Cloud,
-  Database,
+  Cpu,
   FileText,
+  Lock,
   Mail,
   PlayCircle,
-  ServerCog,
   ShieldCheck
 } from 'lucide-react'
 import { HeroTerminal } from './hero-terminal'
 
 const ARCHITECTURE = [
-  { icon: Cloud, label: 'Client-First Ingestion', detail: 'Data parsing and operations run inside the client sandbox, ensuring zero server-side credential storage.' },
-  { icon: Database, label: 'Durable Case Lifecycle', detail: 'Step-by-step processing operates through distributed state orchestrators to preserve secure progress.' },
-  { icon: ServerCog, label: 'Automated Tax Compiler', detail: 'Custom analytical modules compile complex unstructured withholding ledgers into structured tax profiles.' },
-  { icon: FileText, label: 'Interoperable Schemas', detail: 'Final filings compile into open-standard JSON data structures, ready for direct e-portal ingestion.' }
+  { icon: Lock, label: 'Nothing Leaves Your Device', detail: 'Your AIS, Form 26AS, PAN and numbers are parsed and computed locally. There is no server to send them to — open the network tab and watch.' },
+  { icon: Cpu, label: 'Go Engine, Compiled to WASM', detail: 'A deterministic tax engine runs in your browser — §44ADA presumptive math, both regimes compared, §87A marginal relief, surcharge and cess.' },
+  { icon: ShieldCheck, label: 'Guardrails, Not Guesses', detail: 'Capital gains, mixed income, receipts over the limit? Trove refuses to draft a return it can’t get right — and tells you exactly why.' },
+  { icon: FileText, label: 'Official ITR-4 Schema', detail: 'Every draft validates against the CBDT’s published ITR-4 JSON schema, ready to import directly on the e-filing portal.' }
 ]
 
 export function Hero() {
@@ -31,16 +30,16 @@ export function Hero() {
             trove<span className="text-primary">*</span>
           </a>
           <div className="hidden items-center gap-8 sm:flex">
-            <a href="#walkthrough" className="font-mono text-xs font-bold uppercase tracking-wider text-[#F0EDE6]/50 transition hover:text-[#F0EDE6]">
+            <a href="#walkthrough" className="font-mono text-xs font-bold uppercase tracking-wider text-[#F0EDE6]/70 transition hover:text-[#F0EDE6]">
               walkthrough
             </a>
-            <a href="#system" className="font-mono text-xs font-bold uppercase tracking-wider text-[#F0EDE6]/50 transition hover:text-[#F0EDE6]">
+            <a href="#system" className="font-mono text-xs font-bold uppercase tracking-wider text-[#F0EDE6]/70 transition hover:text-[#F0EDE6]">
               system
             </a>
           </div>
 
           <a
-            href="/auth/signin"
+            href="/file"
             className="inline-block bg-primary px-5 py-2.5 font-mono text-xs font-black uppercase tracking-wider text-black transition-all hover:bg-primary/95"
             style={{ clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))' }}
           >
@@ -52,17 +51,17 @@ export function Hero() {
           <div className="flex flex-col items-center text-center gap-6 mb-14 sm:mb-18 lg:mb-20">
             <div className="flex w-fit items-center gap-2 border border-primary/25 bg-primary/[0.06] px-3 py-1.5 font-mono text-[10px] font-black uppercase text-primary">
               <ShieldCheck size={13} />
-              Built for freelance TDS recovery
+              100% in your browser — nothing is uploaded
             </div>
             <h1 className="max-w-4xl text-4xl font-black leading-[1.06] tracking-tight text-[#F0EDE6] sm:text-5xl lg:text-6xl">
-              Turn withheld TDS into a ready-to-file <span className="font-serif italic font-bold text-primary">ITR-1.</span>
+              Turn withheld TDS into a ready-to-file <span className="font-serif italic font-bold text-primary">ITR-4.</span>
             </h1>
-            <p className="max-w-xl text-base leading-7 text-[#F0EDE6]/45 font-light sm:text-lg">
-              Trove reads Form 26AS, identifies tax deducted by clients, calculates the refundable balance, and compiles the filing draft.
+            <p className="max-w-xl text-base leading-7 text-[#F0EDE6]/65 font-light sm:text-lg">
+              Drop in your AIS or Form 26AS. Trove finds the tax your clients withheld, computes your refund, and drafts a portal-ready ITR-4 — without your data ever leaving your device.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row mt-2">
               <a
-                href="/auth/signin"
+                href="/file"
                 className="inline-flex items-center justify-center gap-2 bg-primary px-7 py-3.5 font-mono text-xs font-black uppercase tracking-wider text-black transition hover:bg-primary/90"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))' }}
               >
@@ -94,8 +93,8 @@ export function Hero() {
               The complete recovery path in{' '}
               <span className="font-serif italic text-primary font-normal">one minute.</span>
             </h2>
-            <p className="text-sm leading-relaxed text-[#F0EDE6]/40 font-light max-w-lg">
-              From sign-in to Form 26AS scan, refund review, approval, and ITR-1 JSON download — watch the full flow.
+            <p className="text-sm leading-relaxed text-[#F0EDE6]/60 font-light max-w-lg">
+              From statement upload to the refund math, regime comparison, and ITR-4 JSON download — watch the full flow.
             </p>
           </div>
 
@@ -120,11 +119,10 @@ export function Hero() {
               System behind the interface
             </p>
             <h2 className="text-3xl sm:text-4xl font-light tracking-tight text-[#F0EDE6] leading-[1.12]">
-              A product <span className="font-serif italic text-primary font-normal">slice</span>,
-              not a static screen.
+              A real engine, <span className="font-serif italic text-primary font-normal">zero</span> servers.
             </h2>
-            <p className="text-sm leading-relaxed text-[#F0EDE6]/45 font-light max-w-xl">
-              Trove is engineered around client data security, state transparency, and compiler precision to drive a seamless tax recovery pipeline.
+            <p className="text-sm leading-relaxed text-[#F0EDE6]/65 font-light max-w-xl">
+              Trove’s tax engine is written in Go, compiled to WebAssembly, and shipped to your browser. Every rupee is computed on your machine — deterministically, with the working shown line by line.
             </p>
           </div>
 
@@ -142,14 +140,14 @@ export function Hero() {
                     <span className="font-mono text-[10px] font-black tracking-widest text-primary">
                       [ 0{index + 1} ]
                     </span>
-                    <Icon className="text-[#F0EDE6]/25 group-hover:text-primary transition-colors duration-300" size={18} />
+                    <Icon className="text-[#F0EDE6]/60 group-hover:text-primary transition-colors duration-300" size={18} />
                   </div>
 
                   <div className="relative z-10 mt-6 flex-1 flex flex-col justify-end">
                     <h3 className="text-base sm:text-lg font-semibold tracking-tight text-[#F0EDE6] group-hover:text-white transition-colors duration-300 leading-snug">
                       {label}
                     </h3>
-                    <p className="mt-2.5 text-[11px] sm:text-xs leading-relaxed text-[#F0EDE6]/45 group-hover:text-[#F0EDE6]/65 transition-colors duration-300">
+                    <p className="mt-2.5 text-[11px] sm:text-xs leading-relaxed text-[#F0EDE6]/65 group-hover:text-[#F0EDE6]/65 transition-colors duration-300">
                       {detail}
                     </p>
                   </div>

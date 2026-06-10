@@ -19,7 +19,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: "trove",
-  description: "agent that gets indian freelancers back the tax money the system quietly keeps."
+  description: "gets indian freelancers back the tds the system quietly keeps — refund math and a ready-to-file itr-4, computed entirely in your browser."
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

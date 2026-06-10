@@ -1,0 +1,47 @@
+                                      FORM 26AS
+        Annual Tax Statement Under Section 203AA of the Income-Tax Act, 1961
+                        SYNTHETIC TEST FIXTURE (NO REAL PII)
+
+Permanent Account Number (PAN): ABCDE1234F                                 Assessment Year (AY):
+                                                                           2026-27
+
+Name of Taxpayer: ARJUN MOCK SHARMA                                        Financial Year (FY):
+                                                                           2025-26
+
+Address: 42, FLAT 302, MOCKINGBIRD TOWERS, SECTOR 5, HSR LAYOUT,           Status: Resident
+BENGALURU, KARNATAKA - 560102                                              Individual
+
+
+PART A - Details of Tax Deducted at Source (TDS)
+
+Sl.No Name of Deductor                   TAN of        Total Amount  Total Tax       Total Tax
+                                         Deductor      Paid/Credited Deducted        Deposited
+
+1       NEXUS TECH SOLUTIONS PRIVATE     BLRN12345C    4,50,000.00    45,000.00      45,000.00
+        LIMITED
+
+    ↳ Section: 194J | Transaction Date: 15/07/2025 | Status: Finalized | Booking Date: 31/07/2025
+
+                                                       3,20,000.00    32,000.00      32,000.00
+
+    ↳ Section: 194J | Transaction Date: 18/11/2025 | Status: Finalized | Booking Date: 30/11/2025
+
+2       GLOBAL CONTRACTORS CORP          MUMG98765D    12,00,000.00   24,000.00      24,000.00
+
+    ↳ Section: 194C | Transaction Date: 02/09/2025 | Status: Finalized | Booking Date: 15/09/2025
+
+3       ALPHA FOUNDATION TRUST           DELA11223E    1,50,000.00    0.00           0.00
+
+    ↳ Section: 197 | Certificate Ref: 197LOWTDS99X | Transaction Date: 12/01/2026 | Status:
+    Finalized
+
+
+PART B - Details of Tax Collected at Source (TCS)
+
+Sl.No Name of Collector                  TAN of        Total Amount   Total Tax      Total Tax
+                                         Collector     Debited        Collected      Deposited
+
+1       LUXURY MOTOR CARS INC            DELM55443F    45,00,000.00   45,000.00      45,000.00
+
+    ↳ Section: 206C-1F | Collection Date: 20/10/2025 | Status: Finalized
+

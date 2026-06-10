@@ -25,15 +25,16 @@ jobs:
       - name: Run Typecheck
         run: bun run --cwd web typecheck
 
+      - name: Run Web Unit Tests
+        run: bun run --cwd web test
+
       - name: Run Next.js Build
         run: bun run --cwd web build
         env:
-          NEXT_PUBLIC_AUTH_DEMO: "true"
           NEXT_PUBLIC_HERO_VIDEO_URL: "https://ci8w4apv5qhhvpkg.public.blob.vercel-storage.com/final.mp4"
-          AUTH_SECRET: "ci-secret-value-for-testing"
 
   verify-backend:
-    name: Verify Backend (Go)
+    name: Verify Engine (Go + WASM)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -48,5 +49,11 @@ jobs:
       - name: Install Go Dependencies
         run: cd services/backend && go mod download
 
+      - name: Run go vet
+        run: cd services/backend && go vet ./...
+
       - name: Run Go Unit Tests
-        run: cd services/backend && go test -v ./...
+        run: cd services/backend && go test -race -cover ./...
+
+      - name: Verify WASM build (client engine)
+        run: cd services/backend && GOOS=js GOARCH=wasm go build -o /dev/null ./cmd/wasm

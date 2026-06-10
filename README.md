@@ -4,7 +4,7 @@ Trove is an intelligent tax recovery engine built to reclaim excess Tax Deducted
 
 Every year, millions of self-employed gig workers leave ₹15,000–40,000 of hard-earned income with the tax department because filing manually is confusing and hiring a Chartered Accountant (CA) costs more than the refund itself. 
 
-Trove connects directly to tax gateways, parses complex unstructured withholding ledgers, runs agentic compliance analysis to isolate unclaimed refunds, and drafts a ready-to-file, schema-validated ITR-1 tax return.
+Trove parses AIS / Form 26AS statements entirely inside the browser, runs a deterministic §44ADA presumptive-tax computation through a Go engine compiled to WebAssembly, and drafts a ready-to-file, schema-validated ITR-4 tax return — without a single byte of financial data ever leaving the user's device.
 
 ---
 
@@ -19,88 +19,95 @@ Trove was born out of casual conversations at a local tech meetup. Rather than b
 
 ---
 
-## 🛠️ Architecture & Edge Orchestration
+## 🛠️ Architecture: Everything Runs in the Browser
 
-Building Trove was a deep dive into edge compute, serverless transactions, and zero-trust data sandboxing. 
+Building Trove was a deep dive into WebAssembly, client-side document processing, and zero-trust design taken to its logical conclusion: there is no server-side data path at all. The entire tax engine ships to the user.
 
 ### Systems Architecture
-
-The data pipeline utilizes a highly responsive, event-driven orchestration layer deployed across edge nodes and serverless microservices:
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as Freelancer (Browser)
-    participant Front as Next.js Client
-    participant BFF as Cloudflare BFF
-    participant State as Durable Object (CaseState)
-    participant Go as Go Ingestion Backend
-    participant Neon as Neon Postgres DB
+    participant UI as Next.js Client
+    participant PDF as pdf.js (Web Worker)
+    participant WASM as Go Tax Engine (WASM)
 
-    User->>Front: 1. Drag & Drop Form 26AS (PII Redacted Locally)
-    Front->>BFF: 2. Initiate Audit Workflow (POST /api/cases)
-    BFF->>State: 3. Spin up Durable Object state machine
-    State->>Go: 4. Forward sanitized ledger payload
-    Go->>Neon: 5. Fetch historical tax rules & tables
-    Neon-->>Go: 6. Return compliance metadata
-    Go-->>State: 7. Yield audited TDS & calculated refund
-    State-->>BFF: 8. Update state transition to 'Awaiting Approval'
-    BFF-->>Front: 9. Stream step progress timeline via SSE
-    User->>Front: 10. Click "Authorize & Compile Filing"
-    Front->>BFF: 11. Send signed approval event
-    BFF->>State: 12. Advance DO state machine to 'Drafted'
-    State->>Go: 13. Request schema validation
-    Go-->>Front: 14. Compile & download schema-validated ITR-1 JSON
+    User->>UI: 1. Drop AIS / Form 26AS (PDF or JSON)
+    UI->>PDF: 2. Extract text locally (unlock with PAN+DOB if encrypted)
+    PDF-->>UI: 3. Raw statement text
+    UI->>WASM: 4. troveAnalyze(statement, questionnaire)
+    WASM->>WASM: 5. Parse ledger → eligibility guardrails → dual-regime §44ADA computation
+    WASM-->>UI: 6. Refund breakdown + schema-validated ITR-4 draft
+    User->>UI: 7. Add personal & bank details (stays in-browser)
+    UI->>WASM: 8. Re-draft with real details on the return
+    WASM-->>User: 9. Download ITR-4 JSON → import on incometax.gov.in → e-verify
 ```
+
+The user stays the filer of record — Trove never logs into the portal or files on anyone's behalf.
 
 ---
 
-## 🧠 The Agentic AI & Compliance Pipeline
+## 🧠 The Compliance Pipeline
 
-Trove bridges the gap between structured tax logic and unstructured real-world financial documents through a highly secure, multi-stage compliance pipeline:
+Trove bridges the gap between structured tax logic and unstructured real-world financial documents through a deterministic, multi-stage pipeline — with the LLM-free guarantee that **no AI ever computes a number**:
 
-1.  **PII Sanitization (Client-Side)**: Sensitive identifiers (PAN cards, personal addresses, phone numbers) are parsed and redacted locally inside the client's browser sandbox before ever leaving their device.
-2.  **Unstructured Parsing (Agentic Extraction)**: When users upload custom statement PDFs or receipts, a custom LLM layout analyzer (powered by Gemini) extracts the withholding records and aligns them into a unified ledger format.
-3.  **Go Engine Verification**: The ledger entries are fed into our Go backend, which cross-references them against standard Income Tax Section rules (e.g., checking if Section 194J tech fees or 194C contract works were misclassified or underclaimed).
-4.  **Filing Compilation**: The finalized audit matches the tax withholding against estimated taxpayer liabilities to compile a structurally validated ITR-1 JSON schema ready for official e-portal upload.
+1.  **Local Document Extraction**: AIS / Form 26AS PDFs (including password-protected ones — the password is just PAN + DOB, derived in-browser) are text-extracted by pdf.js inside a Web Worker. AIS JSON exports are parsed by a structure-agnostic walker that recognises records by section codes and amounts rather than assuming the portal's exact key names.
+2.  **Ledger Parsing**: The Go engine reconstructs the withholding ledger — multi-row deductors, §197 zero-TDS certificates, Indian lakh-grouped amounts, TCS entries, and SFT capital-gains signals all handled.
+3.  **Eligibility Guardrails**: Before computing a single rupee, the engine checks whether ITR-4 is actually the right form. Capital gains, non-professional income (§194C contract work), receipts above the §44ADA ceiling, foreign assets — any of these and Trove refuses to draft, explains why, and points to ITR-3. A wrong refusal beats a wrong refund.
+4.  **Dual-Regime Computation**: Gross receipts → §44ADA deemed income → both tax regimes computed in full (slabs, §87A rebate with marginal relief, surcharge, cess, capped Chapter VI-A deductions) → whichever leaves the user more money wins.
+5.  **Filing Compilation**: The draft is compiled into the official `{"ITR":{"ITR4":…}}` structure — including per-deductor TDS/TCS schedules — validated against the **official CBDT ITR-4 JSON schema**, and checked against ~25 of the portal's Category-A validation rules so the e-filing portal accepts what Trove produces.
 
 ---
 
 ## ⚡ Performance & Engineering Metrics
 
-To ensure the platform is "usable, secure, and scalable," the system is continuously evaluated against rigorous performance benchmarks:
+To ensure the platform is "usable, secure, and scalable," the system is continuously evaluated against rigorous benchmarks:
 
-*   **Compiler Latency**: Go-based ledger compilation and ITR-1 draft validation runs in **<5ms** per profile.
-*   **State Hydration Latency**: Local edge timeline updates are coordinated through Cloudflare Durable Objects, resolving in single-digit milliseconds with **0 database roundtrips** during scanning phases.
-*   **Tested Reliability**: **100% test coverage** across all core internal Go modules (`parsing`, `audit`, `itr`, `redact`), validating boundary conditions such as zero-TDS entries, multiple deductors, and invalid schema variants.
-*   **Frontend Payload Size**: Built entirely on Next.js 16 (Turbopack) with a highly optimized production footprint, zero heavy global state-management libraries, and hardware-accelerated SVG overlays.
+*   **Zero Bytes Uploaded**: Statements, PAN, refund amounts, bank details — everything is parsed and computed on-device. Open the network tab and watch: the only fetches are the static site and the 4MB `trove.wasm` engine itself.
+*   **Compiler Latency**: Go-based ledger parsing, dual-regime computation, and ITR-4 compilation complete in **single-digit milliseconds** per profile — instant even on mid-range phones.
+*   **Tested Reliability**: **98.9% coverage** on the compute engine (93.2% parsing, 88.4% ITR compilation), backed by a 1,512-combination invariant grid (refund⊕payable exclusivity, regime monotonicity, marginal-relief windows), golden fixtures, and a native Go fuzz target that has chewed through **780k+ hostile inputs** without a crash.
+*   **Schema-Proven Output**: Every draft validates against the official CBDT ITR-4 schema in CI, and the portal's cross-field business rules (refund = taxes paid − liability, schedule totals, rebate ceilings) are re-checked inside the browser on every single draft.
+*   **Frontend Payload Size**: Built on Next.js 16 (Turbopack) as a fully static site, zero heavy global state-management libraries, hardware-accelerated SVG overlays.
 
 ---
 
 ## 📂 Core Architectural Learnings
 
-### 1. Zero-Trust Client-Side Parsing
-We wanted to ensure that sensitive user PII (like PAN cards and tax statement files) never hits our servers unencrypted.
-*   **The Design**: We moved the initial parsing and sanitization to run inside the client's browser sandbox. The frontend processes the document locally, hashes it for deduplication, and redacts PII before sending it downstream.
-*   **The Learning**: Client-side sandboxing is not just a privacy win—it also strips the heavy memory load of parsing complex files off our servers, allowing our core services to remain lightweight, highly scalable, and cost-free.
+### 1. Ship the Engine, Not the Data
+We wanted to ensure that sensitive user PII (PAN cards, tax statements, bank accounts) never hits a server — encrypted or otherwise.
+*   **The Design**: Instead of sanitizing data before sending it to a backend, we deleted the backend. The entire Go tax engine compiles to WebAssembly (`GOOS=js GOARCH=wasm`) and runs inside the browser; pdf.js handles document extraction in a Web Worker; a tight CSP (`wasm-unsafe-eval`, no broad `unsafe-eval`) keeps the sandbox honest.
+*   **The Learning**: "We can't see your data" is a much stronger promise than "we protect your data" — and it's architecturally verifiable by anyone with DevTools. It also made the product free to operate: there is no compute bill for a tax engine the user runs themselves.
 
-### 2. State Machine via Cloudflare Workflows & Durable Objects
-Tax recovery is a multi-step, asynchronous transaction that can span days (pulling, parsing, auditing, and awaiting manual approval). Maintaining a traditional database polling loop or job queue is both fragile and complex.
-*   **The Design**: We modeled the case lifecycle as an event-driven Cloudflare Workflow backed by a per-case Durable Object (`CaseState`). When the agent completes the tax analysis, the workflow halts and suspends its own state using serverless event hooks (`step.waitForEvent`).
-*   **The Learning**: Durable Objects act as a localized, extremely low-latency single source of truth at the edge. Since Next.js polls the DO directly to render the real-time timeline, we avoid hammering our relational Postgres database while a scan is running. The workflow sits suspended in memory, consuming zero active compute resources while waiting for the user's secure approval signature.
+### 2. Guardrails Beat Guesses
+Tax software that silently produces a wrong return is worse than no software. A freelancer with ₹12L of §194C contract income looks almost identical to one with §194J professional fees — but only one of them can legally file ITR-4.
+*   **The Design**: Eligibility is a hard gate in front of the computation. Every signal that suggests ITR-4 is the wrong form (capital-gains SFT entries, mixed income sections, receipt ceilings, foreign assets) returns an explicit `not-eligible:<reason>` instead of a draft, surfaced to the user with the honest recommendation to use ITR-3 or a CA.
+*   **The Learning**: Refusing ~30% of cases is what makes the other ~70% trustworthy. The bounce message is a feature, not a failure state.
 
-### 3. High-Concurrency Go Engine
-We needed a service that could handle strict schema validation, heavy numerical computation, and instant JSON compilation of tax returns.
-*   **The Design**: We built the core ledger compiler in Go, backed by a serverless Neon Postgres store.
-*   **The Learning**: Go's memory efficiency, strict typing, and execution speed made it the perfect choice for the tax return compiler. The Go engine handles standard ITR-1 compilation in single-digit milliseconds, complementing the low-latency edge architecture beautifully.
+### 3. The Official Schema Is an Executable Spec
+The e-filing portal rejects returns for reasons far beyond JSON shape — cross-field arithmetic, schedule consistency, rebate ceilings — documented across a 246KB JSON schema and a 24-page validation-rules PDF.
+*   **The Design**: The real CBDT ITR-4 schema is embedded in the Go engine and every draft validates against it in CI. The portal's Category-A business rules are encoded as a deterministic rule-checker that inspects the exact bytes the user will file — and because it's pure Go, it runs in WASM, so the browser enforces portal rules before the user ever leaves the page.
+*   **The Learning**: Encoding the rules immediately caught a bug the schema alone never would have: drafts claimed TDS credit without the per-deductor schedule rows the portal demands. Schema-valid and portal-rejected are two very different things — treat the regulator's rulebook as a test suite.
 
 ---
 
 ## 🚀 Run
 
-Launch the workspaces concurrently:
+```bash
+bun install
+
+# compile the Go tax engine to WebAssembly (needs Go 1.26+)
+bun run --cwd web build:wasm
+
+# launch the app
+bun run --cwd web dev          # http://localhost:3000
+```
+
+Run the test suites:
 
 ```bash
-bun run dev                                # frontend & edge workers
-cd services/backend && go run ./cmd/server # Go backend engine
+cd services/backend && go test -race ./...   # engine: invariants, goldens, fuzz corpus, schema validation
+bun run --cwd web test                       # web helpers
 ```
+
+> ⚠️ Trove prepares your return; you review and file it yourself on [incometax.gov.in](https://www.incometax.gov.in/iec/foportal/). Tax parameters are pending independent CA verification — treat drafts as a starting point, not advice.

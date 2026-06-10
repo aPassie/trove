@@ -21,17 +21,17 @@ export default function Page() {
               <a href="/" className="font-serif text-xl font-bold text-[#F0EDE6]/80 hover:text-[#F0EDE6] transition-colors">
                 trove<span className="text-primary">*</span>
               </a>
-              <p className="text-[11px] sm:text-xs text-[#F0EDE6]/25 font-light leading-relaxed max-w-xs">
-                Autonomous tax recovery for India&apos;s independent workforce.
+              <p className="text-xs sm:text-sm text-[#F0EDE6]/75 font-light leading-relaxed max-w-xs">
+                In-browser TDS recovery for India&apos;s independent workforce. Your data never leaves your device.
               </p>
             </div>
 
             {/* Copyright + meta */}
             <div className="flex flex-col items-start sm:items-end gap-1.5">
-              <p className="font-mono text-[9px] sm:text-[10px] text-[#F0EDE6]/20 uppercase tracking-[0.2em]">
+              <p className="font-mono text-[10px] sm:text-[11px] text-[#F0EDE6]/65 uppercase tracking-[0.2em]">
                 © {new Date().getFullYear()} Trove Technologies
               </p>
-              <p className="font-mono text-[9px] text-[#F0EDE6]/12 uppercase tracking-widest">
+              <p className="font-mono text-[10px] text-[#F0EDE6]/55 uppercase tracking-widest">
                 All rights reserved
               </p>
             </div>

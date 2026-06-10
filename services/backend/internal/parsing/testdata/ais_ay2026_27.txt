@@ -1,0 +1,40 @@
+Income Tax Department
+Annual Information Statement (AIS) - AY 2026-27 | SYNTHETIC PARSER TEST FIXTURE
+
+
+
+ PART A - GENERAL INFORMATION
+
+ PAN: ABCDE1234F                 Aadhaar: 998877665544          Financial Year: 2025-26         Assessment Year: 2026-27
+
+ Name: ARJUN MOCK                Date of Birth: 01/01/1995      Mobile: +91 9999999999          Email ID:
+ SHARMA                                                                                         testuser@mockdomain.com
+
+ Address: 42, FLAT 302, MOCKINGBIRD TOWERS, SECTOR 5, HSR LAYOUT, BENGALURU, KARNATAKA - 560102
+
+
+
+ PART B1 - TAX DEDUCTED / COLLECTED AT SOURCE (TDS/TCS)
+
+ Info Code     Information Description              Source / Payer Name                   Amount           Tax Deducted
+                                                                                          Received
+
+ 194J          Fees for professional services       NEXUS TECH SOLUTIONS PRIVATE          7,70,000.00      77,000.00
+                                                    LIMITED
+
+ 194C          Payments to contractors              GLOBAL CONTRACTORS CORP               12,00,000.00     24,000.00
+
+
+
+ PART B2 - SPECIFIED FINANCIAL TRANSACTION (SFT)
+
+ Info Code     Information Description              Source / Reporting Entity             Transaction      Share / Type
+                                                                                          Value
+
+ SFT-005       Outward Foreign Remittance           ICICI BANK LIMITED                    7,50,000.00      Self
+
+ SFT-011       Purchase of mutual funds             ZERODHA BROKING LIMITED               3,20,000.00      Self
+
+ SFT-014       Sale of immovable property           SUB-REGISTRAR OFFICE -                45,00,000.00      Joint (50%)
+                                                    BENGALURU
+
